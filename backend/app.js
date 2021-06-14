@@ -1,26 +1,28 @@
-const express = require("express");
-
+import express from "express";
+import dotenv from "dotenv";
 const app = express();
-const AWS = require("aws-sdk");
-// AWS.Config()
-const dotenv = require("dotenv");
+import {
+  CognitoIdentityProviderClient,
+  ListUsersCommand,
+} from "@aws-sdk/client-cognito-identity-provider";
+
 dotenv.config();
 // Update AWS Config
-AWS.config.update({
-  accessKeyId: process.env.ACCESS_KEY_ID,
-  secretAccessKey: process.env.SECRET_KEY,
-  region: process.env.REGION,
-});
-
 app.get("/find", async (req, res) => {
   try {
-    var cognitoidentityserviceprovider =
-      new AWS.CognitoIdentityServiceProvider();
-    const data =  await cognitoidentityserviceprovider.listUsers(
-      {
-        UserPoolId: process.env.USER_POOL_ID,
-      }
-    ).promise();
+    const client = new CognitoIdentityProviderClient({
+      region: process.env.REGION,
+      credentials: {
+        accessKeyId: process.env.ACCESS_KEY_ID,
+        secretAccessKey: process.env.SECRET_KEY,
+    },
+    });
+    const params = {};
+    const command = new ListUsersCommand({
+      UserPoolId: process.env.USER_POOL_ID,
+    });
+    const data = await client.send(command);
+    console.log(data.Users);
     res.send(data.Users)
   } catch (err) {
     res.status(500).send(err.message);
